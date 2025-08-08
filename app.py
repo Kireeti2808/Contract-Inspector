@@ -45,7 +45,7 @@ st.markdown("""
   --gradient-angle: 135deg;
 }
 .gradient-bg {
-  background: linear-gradient(var(--gradient-angle), var--bg-color-1, var--bg-color-2, var--bg-color-3);
+  background: linear-gradient(var(--gradient-angle), var(--bg-color-1), var(--bg-color-2), var(--bg-color-3));
   background-size: 200% 200%;
   animation: gradientShift 20s ease infinite;
 }
@@ -66,7 +66,7 @@ st.markdown("""
 # 🖥 UI Layout
 st.markdown('<div class="gradient-bg" style="padding:2rem;min-height:100vh;">', unsafe_allow_html=True)
 st.markdown("<h1 style='text-align:center;color:black;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;color:white;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;color:black;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
 
 st.markdown('<div class="custom-box">', unsafe_allow_html=True)
 query = st.text_area("Enter your query", placeholder="e.g., '46M, knee surgery, Pune, 3-month policy'")
