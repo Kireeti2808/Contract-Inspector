@@ -48,6 +48,12 @@ st.markdown("""
   background: linear-gradient(var(--gradient-angle), var(--bg-color-1), var(--bg-color-2), var(--bg-color-3));
   background-size: 200% 200%;
   animation: gradientShift 20s ease infinite;
+  position: fixed; /* Fixed positioning to cover the entire page */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1; /* Background layer below all content */
 }
 @keyframes gradientShift {
   0% { background-position: 0% 50%; }
@@ -59,6 +65,9 @@ st.markdown("""
   padding: 1.5rem;
   border-radius: 1rem;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  position: relative; /* Ensure it’s in a new stacking context */
+  z-index: 1; /* Elevate above the gradient background */
+  color: black; /* Ensure text is readable */
 }
 .footer {
   text-align: center;
@@ -67,12 +76,16 @@ st.markdown("""
   font-size: 0.9rem;
   background-color: rgba(0, 0, 0, 0.5);
   margin-top: 1rem;
+  position: relative;
+  z-index: 1; /* Keep footer above gradient */
 }
 </style>
 """, unsafe_allow_html=True)
 
 # 🖥 UI Layout
-st.markdown('<div class="gradient-bg" style="padding:2rem;min-height:100vh;">', unsafe_allow_html=True)
+st.markdown('<div class="gradient-bg">', unsafe_allow_html=True)  # Background layer
+st.markdown('<div style="padding: 2rem;">', unsafe_allow_html=True)  # Content wrapper with padding
+
 st.markdown("<h1 style='text-align:center;color:black;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;color:black;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
 
@@ -94,9 +107,10 @@ if st.button("Submit Query"):
                     st.write(doc.page_content[:400] + "...")
 st.markdown('</div>', unsafe_allow_html=True)  # Close custom-box
 
-# 🦶 New Footer Layout (stacked below)
+# 🦶 Footer Layout (stacked below)
 st.markdown('<div class="footer">', unsafe_allow_html=True)
 st.markdown("<p>© 2025 Contract Inspector | Developed by [Your Name] | <a href='mailto:your-email@example.com' style='color:white;'>Contact Us</a></p>", unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
+st.markdown('</div>', unsafe_allow_html=True)  # Close content wrapper
 st.markdown('</div>', unsafe_allow_html=True)  # Close gradient-bg
