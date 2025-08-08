@@ -83,8 +83,8 @@ qa_chain = make_structured_qa_chain()
 
 # --- 6. STREAMLIT UI ---
 # (Your existing CSS and UI code can go here, but I've updated the logic part)
-st.markdown("<h1 style='text-align:center;color:black;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;color:black;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;color:white;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;color:white;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
 
 st.markdown('<div class="custom-box">', unsafe_allow_html=True)
 query = st.text_area("Enter your query", placeholder="e.g., '46M, knee surgery, Pune, 3-month policy'")
