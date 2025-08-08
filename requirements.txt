@@ -6,3 +6,4 @@ openai==1.99.3
 pypdf==5.9.0
 faiss-cpu==1.11.0.post1
 tiktoken==0.10.0
+sentence-transformers==5.1.0
