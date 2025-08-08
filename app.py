@@ -65,7 +65,7 @@ st.markdown("""
 
 # 🖥 UI Layout
 st.markdown('<div class="gradient-bg" style="padding:2rem;min-height:100vh;">', unsafe_allow_html=True)
-st.markdown("<h1 style='text-align:center;color:white;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center;color:black;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;color:white;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
 
 st.markdown('<div class="custom-box">', unsafe_allow_html=True)
