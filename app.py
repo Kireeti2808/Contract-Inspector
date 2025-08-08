@@ -109,7 +109,7 @@ st.markdown('</div>', unsafe_allow_html=True)  # Close custom-box
 
 # 🦶 Footer Layout (stacked below)
 st.markdown('<div class="footer">', unsafe_allow_html=True)
-st.markdown("<p>© 2025 Contract Inspector | Developed by [Your Name] | <a href='mailto:your-email@example.com' style='color:white;'>Contact Us</a></p>", unsafe_allow_html=True)
+st.markdown("<p>© 2025 Contract Inspector | Developed by Gale_Ops  | <a href='mailto:your-email@example.com' style='color:white;'>Contact Us</a></p>", unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)  # Close content wrapper
