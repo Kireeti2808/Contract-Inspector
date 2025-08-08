@@ -1,6 +1,15 @@
 import os
+import subprocess
+try:
+    import langchain_community
+except ImportError:
+    subprocess.check_call(["pip", "install", "langchain-community", "faiss-cpu", "langchain-openai", "pypdf", "tiktoken", "sentence-transformers"])
+
 import streamlit as st
-from langchain_community.vectorstores import FAISS
+try:
+    from langchain_community.vectorstores import FAISS
+except ImportError:
+    from langchain.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.chains import RetrievalQA
 
