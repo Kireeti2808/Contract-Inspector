@@ -60,6 +60,14 @@ st.markdown("""
   border-radius: 1rem;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
 }
+.footer {
+  text-align: center;
+  padding: 1rem;
+  color: white;
+  font-size: 0.9rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  margin-top: 1rem;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -84,5 +92,11 @@ if st.button("Submit Query"):
                     page = doc.metadata.get("page", "Unknown")
                     st.markdown(f"**{src}** — page {page}")
                     st.write(doc.page_content[:400] + "...")
+st.markdown('</div>', unsafe_allow_html=True)  # Close custom-box
+
+# 🦶 New Footer Layout (stacked below)
+st.markdown('<div class="footer">', unsafe_allow_html=True)
+st.markdown("<p>© 2025 Contract Inspector | Developed by [Your Name] | <a href='mailto:your-email@example.com' style='color:white;'>Contact Us</a></p>", unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)  # Close gradient-bg
