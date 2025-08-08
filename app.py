@@ -1,8 +1,8 @@
 import os
+import streamlit as st
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.chains import RetrievalQA
-import streamlit as st
 
 # 📄 Streamlit Page Config
 st.set_page_config(page_title="Contract Inspector", page_icon="📄", layout="wide")
@@ -45,7 +45,7 @@ st.markdown("""
   --gradient-angle: 135deg;
 }
 .gradient-bg {
-  background: linear-gradient(var(--gradient-angle), var(--bg-color-1), var(--bg-color-2), var(--bg-color-3));
+  background: linear-gradient(var(--gradient-angle), var--bg-color-1, var--bg-color-2, var--bg-color-3);
   background-size: 200% 200%;
   animation: gradientShift 20s ease infinite;
 }
