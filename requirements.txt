@@ -1,10 +1,13 @@
+
 streamlit==1.48.0
 langchain==0.3.27
 langchain-community==0.3.27
 langchain-openai==0.3.9
 openai==1.99.3
-pypdf==5.9.0
+pypdf==5.9.0 # or whichever you use in the build script
 faiss-cpu==1.11.0.post1
 tiktoken==0.10.0
-sentence-transformers==5.1.0
-pydantic>=2.0
+# Add these new ones:
+fastapi
+uvicorn
+python-dotenv
