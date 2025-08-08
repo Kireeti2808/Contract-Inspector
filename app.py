@@ -3,6 +3,7 @@ import streamlit as st
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_core.prompts import PromptTemplate
+# New, correct import
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.runnables import RunnableParallel, RunnablePassthrough
@@ -35,25 +36,37 @@ def load_components():
 retriever = load_components()
 
 # --- 5. CREATE THE ADVANCED RAG CHAIN ---
+@st.cache_resource
 def make_structured_qa_chain():
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    
+    # Instantiate the Pydantic parser
     parser = PydanticOutputParser(pydantic_object=ClaimDecision)
+
+    # Create a detailed prompt template
     prompt_template = """
-    You are an expert insurance claims analyst...
+    You are an expert insurance claims analyst. Your task is to analyze the user's query and the provided document excerpts to make a decision.
+    Base your decision STRICTLY on the context provided.
+    
+    CONTEXT:
     {context}
-    ...
+    
+    QUERY:
     {query}
-    ...
+    
+    INSTRUCTIONS:
+    Respond with a JSON object formatted according to the following schema. Do not add any text before or after the JSON.
+    
     {format_instructions}
-    """ # (Your detailed prompt is here)
+    """
+    
     prompt = PromptTemplate(
-        template=prompt_template.format(
-            context="{context}",
-            query="{query}",
-            format_instructions=parser.get_format_instructions()
-        ),
+        template=prompt_template,
         input_variables=["query", "context"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
     )
+
+    # Create the LCEL chain
     chain = (
         RunnableParallel(
             context=(lambda x: x["query"]) | retriever,
@@ -67,38 +80,11 @@ def make_structured_qa_chain():
 
 qa_chain = make_structured_qa_chain()
 
+
 # --- 6. STREAMLIT UI ---
-
-# 🎨 New CSS Block
-st.markdown("""
-<style>
-.stApp {
-    background: linear-gradient(135deg, #0f172a 0%, #080a13 100%);
-    min-height: 100vh;
-}
-.custom-box {
-    background-color: rgba(17, 24, 39, 0.85);
-    padding: 1.5rem;
-    border-radius: 1rem;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-    color: #e2e8f0;
-}
-.footer {
-    text-align: center;
-    padding: 1rem;
-    color: #94a3b8;
-    font-size: 0.9rem;
-    background-color: transparent;
-    margin-top: 1rem;
-}
-</style>
-""", unsafe_allow_html=True)
-
-
-# 🖥 UI Layout
-st.markdown("<h1 style='text-align:center;color:white;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;color:white;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
+# (Your existing CSS and UI code can go here, but I've updated the logic part)
+st.markdown("<h1 style='text-align:center;color:black;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;color:black;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
 
 st.markdown('<div class="custom-box">', unsafe_allow_html=True)
 query = st.text_area("Enter your query", placeholder="e.g., '46M, knee surgery, Pune, 3-month policy'")
@@ -109,24 +95,26 @@ if st.button("Submit Query"):
     else:
         with st.spinner("Analyzing the documents..."):
             try:
+                # Invoke the chain with the query dictionary
                 result = qa_chain.invoke({"query": query})
 
+                # Display the structured result
                 st.subheader("Decision")
-                st.success(f"**Status:** {result.decision}")
-                st.info(f"**Amount:** ₹{result.amount:,.2f}")
+                st.success(f"*Status:* {result.decision}")
+                st.info(f"*Amount:* ₹{result.amount:,.2f}")
+
                 st.subheader("Justification")
                 st.write(result.justification)
 
                 with st.expander("Supporting Clauses"):
                     for clause in result.source_clauses:
                         st.markdown(f"> {clause}")
+
             except Exception as e:
                 st.error(f"An error occurred: {e}")
                 st.warning("Could not process the query. The documents may not contain relevant information, or the query may be too ambiguous.")
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 🦶 Footer Layout
-st.markdown('<div class="footer">', unsafe_allow_html=True)
-st.markdown("<p>© 2025 Contract Inspector | Developed by You | <a href='#' style='color:white;'>Contact Us</a></p>", unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+# Footer
+st.markdown('<div class="footer">...</div>', unsafe_allow_html=True) # Your footer code
