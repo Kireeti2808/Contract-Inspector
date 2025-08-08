@@ -1,18 +1,4 @@
 import os
-import subprocess
-import importlib
-
-
-required_packages = [
-    "langchain", "langchain-community", "langchain-openai", 
-    "faiss-cpu", "pypdf", "tiktoken", "sentence-transformers"
-]
-for package in required_packages:
-    try:
-        importlib.import_module(package.replace("-", "_"))
-    except ImportError:
-        subprocess.check_call(["pip", "install", package])
-
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.chains import RetrievalQA
