@@ -2,108 +2,118 @@ import os
 import streamlit as st
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.chains import RetrievalQA
+from langchain_core.prompts import PromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.runnables import RunnableParallel, RunnablePassthrough
 
-# 📄 Streamlit Page Config
+# --- 1. STREAMLIT PAGE CONFIG ---
 st.set_page_config(page_title="Contract Inspector", page_icon="📄", layout="wide")
 
-# 🔑 Load OpenAI API key from Streamlit Secrets
+# --- 2. LOAD OPENAI API KEY ---
 if "OPENAI_API_KEY" in st.secrets:
     os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 else:
     st.error("Please set your OpenAI API key in Streamlit Secrets.")
     st.stop()
 
-# 📦 Load FAISS vector store
+# --- 3. DEFINE THE DESIRED JSON STRUCTURE ---
+class ClaimDecision(BaseModel):
+    decision: str = Field(description="The final decision, e.g., 'Approved', 'Rejected', or 'Partially Approved'.")
+    amount: float = Field(description="The approved payout amount. Should be 0.0 if rejected.")
+    justification: str = Field(description="A detailed explanation for the decision, citing specific rules or clauses.")
+    source_clauses: list[str] = Field(description="A list of direct quotes from the source documents that support the justification.")
+
+# --- 4. LOAD VECTORSTORE AND SETUP RETRIEVER ---
 @st.cache_resource
-def load_vectorstore():
+def load_components():
     embeddings = OpenAIEmbeddings(openai_api_key=os.environ["OPENAI_API_KEY"])
-    return FAISS.load_local("faiss_index_openai", embeddings, allow_dangerous_deserialization=True)
+    vectorstore = FAISS.load_local("faiss_index_openai", embeddings, allow_dangerous_deserialization=True)
+    retriever = vectorstore.as_retriever(search_type="mmr", search_kwargs={'k': 10})
+    return retriever
 
-vectorstore = load_vectorstore()
+retriever = load_components()
 
-# 🤖 Make Retrieval QA Chain
+# --- 5. CREATE THE ADVANCED RAG CHAIN ---
 @st.cache_resource
-def make_qa_chain():
+def make_structured_qa_chain():
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-    return RetrievalQA.from_chain_type(
-        llm=llm,
-        chain_type="stuff",
-        retriever=vectorstore.as_retriever(),
-        return_source_documents=True
+    
+    # Instantiate the Pydantic parser
+    parser = PydanticOutputParser(pydantic_object=ClaimDecision)
+
+    # Create a detailed prompt template
+    prompt_template = """
+    You are an expert insurance claims analyst. Your task is to analyze the user's query and the provided document excerpts to make a decision.
+    Base your decision STRICTLY on the context provided.
+    
+    CONTEXT:
+    {context}
+    
+    QUERY:
+    {query}
+    
+    INSTRUCTIONS:
+    Respond with a JSON object formatted according to the following schema. Do not add any text before or after the JSON.
+    
+    {format_instructions}
+    """
+    
+    prompt = PromptTemplate(
+        template=prompt_template,
+        input_variables=["query", "context"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
     )
 
-qa_chain = make_qa_chain()
+    # Create the LCEL chain
+    chain = (
+        RunnableParallel(
+            context=(lambda x: x["query"]) | retriever,
+            query=RunnablePassthrough()
+        )
+        | prompt
+        | llm
+        | parser
+    )
+    return chain
 
-# 🎨 Gradient CSS
-st.markdown("""
-<style>
-:root {
-  --bg-color-1: hsl(0, 80%, 60%);
-  --bg-color-2: hsl(120, 80%, 60%);
-  --bg-color-3: hsl(240, 80%, 60%);
-  --gradient-angle: 135deg;
-}
-.stApp {
-  background: linear-gradient(var(--gradient-angle), var(--bg-color-1), var(--bg-color-2), var(--bg-color-3));
-  background-size: 200% 200%;
-  animation: gradientShift 20s ease infinite;
-  min-height: 100vh; /* Ensure it covers the full viewport */
-}
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-.custom-box {
-  background-color: rgba(17, 24, 39, 0.85);
-  padding: 1.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
-  position: relative;
-  z-index: 1; /* Ensure it’s above the background */
-  color: black;
-}
-.footer {
-  text-align: center;
-  padding: 1rem;
-  color: white;
-  font-size: 0.9rem;
-  background-color: rgba(0, 0, 0, 0.5);
-  margin-top: 1rem;
-  position: relative;
-  z-index: 1;
-}
-</style>
-""", unsafe_allow_html=True)
+qa_chain = make_structured_qa_chain()
 
-# 🖥 UI Layout
-st.markdown('<div style="padding: 2rem;">', unsafe_allow_html=True)  # Content wrapper with padding
 
+# --- 6. STREAMLIT UI ---
+# (Your existing CSS and UI code can go here, but I've updated the logic part)
 st.markdown("<h1 style='text-align:center;color:black;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;color:black;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
 
 st.markdown('<div class="custom-box">', unsafe_allow_html=True)
 query = st.text_area("Enter your query", placeholder="e.g., '46M, knee surgery, Pune, 3-month policy'")
+
 if st.button("Submit Query"):
     if not query.strip():
         st.warning("Please enter a query.")
     else:
         with st.spinner("Analyzing the documents..."):
-            result = qa_chain.invoke({"query": query})
-            st.subheader("Answer")
-            st.write(result["result"])
-            with st.expander("Sources"):
-                for doc in result["source_documents"]:
-                    src = doc.metadata.get("source", "Unknown")
-                    page = doc.metadata.get("page", "Unknown")
-                    st.markdown(f"**{src}** — page {page}")
-                    st.write(doc.page_content[:400] + "...")
-st.markdown('</div>', unsafe_allow_html=True)  # Close custom-box
+            try:
+                # Invoke the chain with the query dictionary
+                result = qa_chain.invoke({"query": query})
 
-# 🦶 Footer Layout (stacked below)
-st.markdown('<div class="footer">', unsafe_allow_html=True)
-st.markdown("<p>© 2025 Contract Inspector | Developed by [Your Name] | <a href='mailto:your-email@example.com' style='color:white;'>Contact Us</a></p>", unsafe_allow_html=True)
+                # Display the structured result
+                st.subheader("Decision")
+                st.success(f"**Status:** {result.decision}")
+                st.info(f"**Amount:** ₹{result.amount:,.2f}")
+
+                st.subheader("Justification")
+                st.write(result.justification)
+
+                with st.expander("Supporting Clauses"):
+                    for clause in result.source_clauses:
+                        st.markdown(f"> {clause}")
+
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+                st.warning("Could not process the query. The documents may not contain relevant information, or the query may be too ambiguous.")
+
 st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)  # Close content wrapper
+# Footer
+st.markdown('<div class="footer">...</div>', unsafe_allow_html=True) # Your footer code
