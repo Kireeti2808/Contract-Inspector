@@ -1,38 +1,42 @@
 import os
 import subprocess
-try:
-    import langchain_community
-except ImportError:
-    subprocess.check_call(["pip", "install", "langchain-community", "faiss-cpu", "langchain-openai", "pypdf", "tiktoken", "sentence-transformers"])
-
-import streamlit as st
 import importlib
 
-if importlib.util.find_spec("langchain_community"):
-    from langchain_community.vectorstores import FAISS
-else:
-    # Old versions of LangChain (<0.1.0)
-    from langchain.vectorstores import FAISS
 
+required_packages = [
+    "langchain", "langchain-community", "langchain-openai", 
+    "faiss-cpu", "pypdf", "tiktoken", "sentence-transformers"
+]
+for package in required_packages:
+    try:
+        importlib.import_module(package.replace("-", "_"))
+    except ImportError:
+        subprocess.check_call(["pip", "install", package])
+
+from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.chains import RetrievalQA
+import streamlit as st
 
+# 📄 Streamlit Page Config
 st.set_page_config(page_title="Contract Inspector", page_icon="📄", layout="wide")
 
-
+# 🔑 Load OpenAI API key from Streamlit Secrets
 if "OPENAI_API_KEY" in st.secrets:
     os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 else:
     st.error("Please set your OpenAI API key in Streamlit Secrets.")
     st.stop()
 
+# 📦 Load FAISS vector store
 @st.cache_resource
 def load_vectorstore():
-    embeddings = OpenAIEmbeddings()
+    embeddings = OpenAIEmbeddings(openai_api_key=os.environ["OPENAI_API_KEY"])
     return FAISS.load_local("faiss_index_openai", embeddings, allow_dangerous_deserialization=True)
 
 vectorstore = load_vectorstore()
 
+# 🤖 Make Retrieval QA Chain
 @st.cache_resource
 def make_qa_chain():
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
@@ -45,6 +49,7 @@ def make_qa_chain():
 
 qa_chain = make_qa_chain()
 
+# 🎨 Gradient CSS
 st.markdown("""
 <style>
 :root {
@@ -72,6 +77,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# 🖥 UI Layout
 st.markdown('<div class="gradient-bg" style="padding:2rem;min-height:100vh;">', unsafe_allow_html=True)
 st.markdown("<h1 style='text-align:center;color:white;'>📄 CONTRACT INSPECTOR</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;color:white;'>Analyze policies, contracts, or emails and get clear, detailed answers instantly.</p>", unsafe_allow_html=True)
