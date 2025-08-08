@@ -1,5 +1,4 @@
 # 📄 Contract Inspector
-
 Contract Inspector is a Streamlit-based application that uses LangChain, FAISS, and OpenAI to let you query insurance policy documents, contracts, or other uploaded PDFs.
 It retrieves relevant clauses and presents concise answers along with source references.
 
